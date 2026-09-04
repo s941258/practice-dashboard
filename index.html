@@ -208,11 +208,26 @@
     .dedication-box {
         background-color: #fcf8e3;
         border: 1px solid #faebcc;
-        color: #8a6d3b;
-        padding: 15px;
-        border-radius: 6px;
-        margin-top: 20px;
+        color: #333333;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 25px;
         font-size: 14px;
+        line-height: 1.8;
+    }
+
+    .dedication-item {
+        margin-bottom: 15px;
+    }
+
+    .dedication-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .dedication-title {
+        color: #8a6d3b;
+        font-weight: bold;
+        font-size: 15px;
     }
 </style>
 </head>
@@ -220,7 +235,7 @@
 
 <div class="container">
     <div class="header">
-        <!-- 圖片網址已更新為圖床連結 -->
+        <!-- 地藏王菩薩圖像 -->
         <img src="https://i.meee.com.tw/AIFKFTK.jpg" alt="地藏王菩薩像" style="max-width: 100%; height: auto; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
 
         <h1>每日修持功課進度儀表板</h1>
@@ -330,13 +345,31 @@
         </table>
     </div>
 
+    <!-- 專屬功課迴向文 -->
     <div class="dedication-box">
-        <strong>💡 每日迴向提醒：</strong> 誦經持咒完畢後，請保持清淨心與誠心，依專屬迴向文完成迴向。
+        <h3 style="margin-top: 0; color: #8a6d3b; font-size: 18px; border-bottom: 1px solid #faebcc; padding-bottom: 8px;">❖ 專屬功課迴向文（每日誦持完畢後誠心念誦）</h3>
+        
+        <div class="dedication-item">
+            <span class="dedication-title">【一、地藏菩薩本願經】</span><br>
+            <strong>通用迴向：</strong>願以此誦《地藏菩薩本願經》之功德，迴向十方法界一切眾生，離苦得樂，同證菩提。<br>
+            <strong>專屬迴向：</strong>弟子願以此功德，專門迴向給過去生中因見需求未給、私利致他人離散、保管不還及傲慢輕忽所傷害的一切冤親債主、歷代宗親與有緣眾生。祈求大願地藏王菩薩慈悲加持，解冤釋結，願諸眾生放下怨恨，往生極樂或善道。並祈求菩薩保佑弟子化解自我懷疑、情感疏離、事業發展阻礙與心中的悲苦，安定身心，福慧增長。
+        </div>
+
+        <div class="dedication-item">
+            <span class="dedication-title">【二、藥師灌頂真言】</span><br>
+            <strong>通用迴向：</strong>願以此誦《藥師灌頂真言》之功德，迴向十方法界一切病苦眾生，皆得清涼，身心安樂。<br>
+            <strong>專屬迴向：</strong>弟子願以此功德，祈求藥師琉璃光如來慈悲光照，加持與弟子有緣之諸病苦眾生及冤親債主化解病緣，各得安樂。並祈求藥師佛加持弟子，清淨氣血，疏通腰腹及全身諸多阻塞，祛除病氣與陰邪，讓身體康復、氣血順暢、精神煥發。
+        </div>
+
+        <div class="dedication-item">
+            <span class="dedication-title">【三、大悲咒】</span><br>
+            <strong>通用迴向：</strong>願以此誦《大悲咒》之功德，迴向十方法界一切眾生，悉發菩提心，遠離諸苦難。<br>
+            <strong>專屬迴向：</strong>弟子願以此功德，祈求千手千眼觀世音菩薩大慈大悲加持，護佑弟子過往所造諸不善業得以消滅，化解一切無形阻力與外在困境。祈求菩薩賜予信心與力量，讓弟子在事業開展、人際感情與生活各方面皆能順利無礙，心靈平靜祥和。
+        </div>
     </div>
 </div>
 
 <script>
-    // ⚠️ 已保留您原有的 Apps Script Web App URL
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWfPLVMTRoDg_RhJLETJRyUVR670CPGiJPCGDjoB8zptedFqbLXdJJHbj-2uHb_zfqbw/exec";
 
     const TARGET_KSITIGARBHA = 637;
@@ -352,7 +385,6 @@
         el.style.display = 'block';
     }
 
-    // 載入 Google Sheet 資料
     async function loadSheetData() {
         if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_APPS_SCRIPT")) {
             showStatus("⚠️ 請先將 Google Apps Script 的 Web App 網址設定至程式碼中的 GAS_WEB_APP_URL！", "error");
@@ -374,7 +406,6 @@
         }
     }
 
-    // 更新介面 UI
     function updateUI(logs) {
         let totalKsitigarbha = 0;
         let totalBhaisajyaguru = 0;
@@ -401,7 +432,6 @@
             tableBody.appendChild(tr);
         });
 
-        // 計算進度
         const pctKsitigarbha = Math.min((totalKsitigarbha / TARGET_KSITIGARBHA) * 100, 100);
         const pctBhaisajyaguru = Math.min((totalBhaisajyaguru / TARGET_BHAISAJYAGURU) * 100, 100);
         const pctNilakantha = Math.min((totalNilakantha / TARGET_NILAKANTHA) * 100, 100);
@@ -420,7 +450,6 @@
         document.getElementById('total-percent-text').innerText = pctTotal.toFixed(1) + '%';
     }
 
-    // 表單提交（新增至 Google Sheet）
     document.getElementById('log-form').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -450,13 +479,11 @@
 
             showStatus("✓ 成功寫入 Google Sheet！正在重新整理資料...", "success");
 
-            // 重置欄位
             document.getElementById('ksitigarbha-input').value = '0';
             document.getElementById('bhaisajyaguru-input').value = '0';
             document.getElementById('nilakantha-input').value = '0';
             document.getElementById('notes-input').value = '';
 
-            // 延遲載入新資料（確保 Sheet 已同步）
             setTimeout(() => {
                 loadSheetData();
                 btn.disabled = false;
@@ -471,7 +498,6 @@
         }
     });
 
-    // 頁面初始化
     loadSheetData();
 </script>
 </body>
