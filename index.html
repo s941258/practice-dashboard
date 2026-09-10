@@ -86,11 +86,21 @@
     }
 
     .stat-text {
-        font-size: 14px;
+        font-size: 13px;
         color: #555;
         display: flex;
         justify-content: space-between;
     }
+
+    .status-badge {
+        font-weight: bold;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+
+    .badge-ahead { color: #2e7d32; }
+    .badge-behind { color: #c62828; }
+    .badge-ontrack { color: #1565c0; }
 
     .total-card {
         grid-column: 1 / -1;
@@ -235,7 +245,6 @@
 
 <div class="container">
     <div class="header">
-        <!-- 地藏王菩薩圖像 -->
         <img src="https://i.meee.com.tw/AIFKFTK.jpg" alt="地藏王菩薩像" style="max-width: 100%; height: auto; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
 
         <h1>每日修持功課進度儀表板</h1>
@@ -248,12 +257,16 @@
     <!-- 總覽儀表板 -->
     <div class="dashboard-grid">
         <div class="card total-card">
-            <h3>整體總進度 (Total Progress)</h3>
+            <h3>第一階段 (前49天) 與 總進度</h3>
             <div class="progress-bar-container">
                 <div class="progress-bar" id="total-progress-bar"></div>
             </div>
             <div class="stat-text">
-                <span>綜合完成率</span>
+                <span>第 1 階段進度 (目標49天)</span>
+                <span id="stage1-percent-text" style="color: #f1c40f; font-weight: bold;">0.0%</span>
+            </div>
+            <div class="stat-text" style="margin-top: 5px;">
+                <span>總修持完成率 (目標196天)</span>
                 <span id="total-percent-text">0.0%</span>
             </div>
         </div>
@@ -264,9 +277,10 @@
                 <div class="progress-bar" id="ksitigarbha-bar"></div>
             </div>
             <div class="stat-text">
-                <span>目標：637 卷 (49本)</span>
-                <span id="ksitigarbha-text">0 / 637 卷 (0.0%)</span>
+                <span>階段目標：159.25 卷 (12.25本)</span>
+                <span id="ksitigarbha-text">0 / 159.25 卷</span>
             </div>
+            <div id="ksitigarbha-status" class="status-badge">-</div>
         </div>
 
         <div class="card">
@@ -275,9 +289,10 @@
                 <div class="progress-bar" id="bhaisajyaguru-bar"></div>
             </div>
             <div class="stat-text">
-                <span>目標：4,116 次</span>
-                <span id="bhaisajyaguru-text">0 / 4116 次 (0.0%)</span>
+                <span>階段目標：1,029 次</span>
+                <span id="bhaisajyaguru-text">0 / 1029 次</span>
             </div>
+            <div id="bhaisajyaguru-status" class="status-badge">-</div>
         </div>
 
         <div class="card">
@@ -286,9 +301,10 @@
                 <div class="progress-bar" id="nilakantha-bar"></div>
             </div>
             <div class="stat-text">
-                <span>目標：1,372 次</span>
-                <span id="nilakantha-text">0 / 1372 次 (0.0%)</span>
+                <span>階段目標：343 次</span>
+                <span id="nilakantha-text">0 / 343 次</span>
             </div>
+            <div id="nilakantha-status" class="status-badge">-</div>
         </div>
     </div>
 
@@ -372,6 +388,13 @@
 <script>
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWfPLVMTRoDg_RhJLETJRyUVR670CPGiJPCGDjoB8zptedFqbLXdJJHbj-2uHb_zfqbw/exec";
 
+    // 階段一（49天）目標
+    const STAGE1_DAYS = 49;
+    const STAGE1_KSITIGARBHA = 159.25; // 49 * 3.25
+    const STAGE1_BHAISAJYAGURU = 1029;   // 49 * 21
+    const STAGE1_NILAKANTHA = 343;      // 49 * 7
+
+    // 總目標 (196天)
     const TARGET_KSITIGARBHA = 637;
     const TARGET_BHAISAJYAGURU = 4116;
     const TARGET_NILAKANTHA = 1372;
@@ -414,6 +437,9 @@
         const tableBody = document.getElementById('logs-table-body');
         tableBody.innerHTML = '';
 
+        // 計算實際填寫天數（不重複天數或紀錄總筆數）
+        const validDays = logs.filter(l => l.date).length || 1;
+
         logs.forEach(log => {
             totalKsitigarbha += Number(log.ksitigarbha || 0);
             totalBhaisajyaguru += Number(log.bhaisajyaguru || 0);
@@ -432,22 +458,51 @@
             tableBody.appendChild(tr);
         });
 
-        const pctKsitigarbha = Math.min((totalKsitigarbha / TARGET_KSITIGARBHA) * 100, 100);
-        const pctBhaisajyaguru = Math.min((totalBhaisajyaguru / TARGET_BHAISAJYAGURU) * 100, 100);
-        const pctNilakantha = Math.min((totalNilakantha / TARGET_NILAKANTHA) * 100, 100);
-        const pctTotal = (pctKsitigarbha + pctBhaisajyaguru + pctNilakantha) / 3;
+        // 第一階段百分比
+        const pctStage1Ksit = Math.min((totalKsitigarbha / STAGE1_KSITIGARBHA) * 100, 100);
+        const pctStage1Bhai = Math.min((totalBhaisajyaguru / STAGE1_BHAISAJYAGURU) * 100, 100);
+        const pctStage1Nila = Math.min((totalNilakantha / STAGE1_NILAKANTHA) * 100, 100);
+        const pctStage1Total = (pctStage1Ksit + pctStage1Bhai + pctStage1Nila) / 3;
 
-        document.getElementById('ksitigarbha-bar').style.width = pctKsitigarbha.toFixed(1) + '%';
-        document.getElementById('ksitigarbha-text').innerText = `${totalKsitigarbha} / ${TARGET_KSITIGARBHA} 卷 (${pctKsitigarbha.toFixed(1)}%)`;
+        // 總進度百分比
+        const pctTotal = ((totalKsitigarbha / TARGET_KSITIGARBHA) + (totalBhaisajyaguru / TARGET_BHAISAJYAGURU) + (totalNilakantha / TARGET_NILAKANTHA)) / 3 * 100;
 
-        document.getElementById('bhaisajyaguru-bar').style.width = pctBhaisajyaguru.toFixed(1) + '%';
-        document.getElementById('bhaisajyaguru-text').innerText = `${totalBhaisajyaguru} / ${TARGET_BHAISAJYAGURU} 次 (${pctBhaisajyaguru.toFixed(1)}%)`;
+        // 計算目前理論預期應達到的數量 (基於已記錄的天數)
+        const expectedKsit = validDays * 3.25;
+        const expectedBhai = validDays * 21;
+        const expectedNila = validDays * 7;
 
-        document.getElementById('nilakantha-bar').style.width = pctNilakantha.toFixed(1) + '%';
-        document.getElementById('nilakantha-text').innerText = `${totalNilakantha} / ${TARGET_NILAKANTHA} 次 (${pctNilakantha.toFixed(1)}%)`;
+        // 更新各個卡片
+        document.getElementById('ksitigarbha-bar').style.width = pctStage1Ksit.toFixed(1) + '%';
+        document.getElementById('ksitigarbha-text').innerText = `${totalKsitigarbha} / ${STAGE1_KSITIGARBHA} 卷 (${pctStage1Ksit.toFixed(1)}%)`;
+        updateStatusBadge('ksitigarbha-status', totalKsitigarbha - expectedKsit, "卷");
 
-        document.getElementById('total-progress-bar').style.width = pctTotal.toFixed(1) + '%';
+        document.getElementById('bhaisajyaguru-bar').style.width = pctStage1Bhai.toFixed(1) + '%';
+        document.getElementById('bhaisajyaguru-text').innerText = `${totalBhaisajyaguru} / ${STAGE1_BHAISAJYAGURU} 次 (${pctStage1Bhai.toFixed(1)}%)`;
+        updateStatusBadge('bhaisajyaguru-status', totalBhaisajyaguru - expectedBhai, "次");
+
+        document.getElementById('nilakantha-bar').style.width = pctStage1Nila.toFixed(1) + '%';
+        document.getElementById('nilakantha-text').innerText = `${totalNilakantha} / ${STAGE1_NILAKANTHA} 次 (${pctStage1Nila.toFixed(1)}%)`;
+        updateStatusBadge('nilakantha-status', totalNilakantha - expectedNila, "次");
+
+        document.getElementById('total-progress-bar').style.width = pctStage1Total.toFixed(1) + '%';
+        document.getElementById('stage1-percent-text').innerText = pctStage1Total.toFixed(1) + '%';
         document.getElementById('total-percent-text').innerText = pctTotal.toFixed(1) + '%';
+    }
+
+    // 輔助函式：顯示超前/落後標籤
+    function updateStatusBadge(elementId, diff, unit) {
+        const el = document.getElementById(elementId);
+        if (Math.abs(diff) < 0.1) {
+            el.innerText = "✓ 進度符合預期";
+            el.className = "status-badge badge-ontrack";
+        } else if (diff > 0) {
+            el.innerText = `▲ 超前 ${diff.toFixed(1)} ${unit}`;
+            el.className = "status-badge badge-ahead";
+        } else {
+            el.innerText = `▼ 落後 ${Math.abs(diff).toFixed(1)} ${unit}`;
+            el.className = "status-badge badge-behind";
+        }
     }
 
     document.getElementById('log-form').addEventListener('submit', async function(e) {
