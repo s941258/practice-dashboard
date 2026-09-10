@@ -86,7 +86,7 @@
     }
 
     .stat-text {
-        font-size: 13px;
+        font-size: 14px;
         color: #555;
         display: flex;
         justify-content: space-between;
@@ -257,7 +257,7 @@
     <!-- 總覽儀表板 -->
     <div class="dashboard-grid">
         <div class="card total-card">
-            <h3>第一階段 (前49天) 與 總進度</h3>
+            <h3>修持天數：目前第 <span id="current-day-text" style="color: #f1c40f; font-size: 22px; font-weight: bold;">0</span> 天 / 49 天</h3>
             <div class="progress-bar-container">
                 <div class="progress-bar" id="total-progress-bar"></div>
             </div>
@@ -388,11 +388,14 @@
 <script>
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWfPLVMTRoDg_RhJLETJRyUVR670CPGiJPCGDjoB8zptedFqbLXdJJHbj-2uHb_zfqbw/exec";
 
+    // 起始日期：2026 年 8 月 31 日
+    const START_DATE = new Date("2026-08-31T00:00:00");
+
     // 階段一（49天）目標
     const STAGE1_DAYS = 49;
-    const STAGE1_KSITIGARBHA = 159.25; // 49 * 3.25
-    const STAGE1_BHAISAJYAGURU = 1029;   // 49 * 21
-    const STAGE1_NILAKANTHA = 343;      // 49 * 7
+    const STAGE1_KSITIGARBHA = 159.25; 
+    const STAGE1_BHAISAJYAGURU = 1029;   
+    const STAGE1_NILAKANTHA = 343;      
 
     // 總目標 (196天)
     const TARGET_KSITIGARBHA = 637;
@@ -400,6 +403,15 @@
     const TARGET_NILAKANTHA = 1372;
 
     document.getElementById('log-date').valueAsDate = new Date();
+
+    // 動態計算今天距離 8/31 是第幾天
+    function calculateCurrentDay() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const diffTime = today - START_DATE;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        return Math.max(1, diffDays); // 最少為第 1 天
+    }
 
     function showStatus(msg, type) {
         const el = document.getElementById('status-msg');
@@ -434,13 +446,15 @@
         let totalBhaisajyaguru = 0;
         let totalNilakantha = 0;
 
+        const safeLogs = Array.isArray(logs) ? logs : [];
         const tableBody = document.getElementById('logs-table-body');
         tableBody.innerHTML = '';
 
-        // 計算實際填寫天數（不重複天數或紀錄總筆數）
-        const validDays = logs.filter(l => l.date).length || 1;
+        // 計算當前天數 (以 8/31 為 Day 1)
+        const currentDay = calculateCurrentDay();
+        document.getElementById('current-day-text').innerText = currentDay;
 
-        logs.forEach(log => {
+        safeLogs.forEach(log => {
             totalKsitigarbha += Number(log.ksitigarbha || 0);
             totalBhaisajyaguru += Number(log.bhaisajyaguru || 0);
             totalNilakantha += Number(log.nilakantha || 0);
@@ -467,12 +481,12 @@
         // 總進度百分比
         const pctTotal = ((totalKsitigarbha / TARGET_KSITIGARBHA) + (totalBhaisajyaguru / TARGET_BHAISAJYAGURU) + (totalNilakantha / TARGET_NILAKANTHA)) / 3 * 100;
 
-        // 計算目前理論預期應達到的數量 (基於已記錄的天數)
-        const expectedKsit = validDays * 3.25;
-        const expectedBhai = validDays * 21;
-        const expectedNila = validDays * 7;
+        // 計算截至今日理論上應達到的數量
+        const expectedKsit = currentDay * 3.25;
+        const expectedBhai = currentDay * 21;
+        const expectedNila = currentDay * 7;
 
-        // 更新各個卡片
+        // 更新各個卡片與超前/落後狀態
         document.getElementById('ksitigarbha-bar').style.width = pctStage1Ksit.toFixed(1) + '%';
         document.getElementById('ksitigarbha-text').innerText = `${totalKsitigarbha} / ${STAGE1_KSITIGARBHA} 卷 (${pctStage1Ksit.toFixed(1)}%)`;
         updateStatusBadge('ksitigarbha-status', totalKsitigarbha - expectedKsit, "卷");
@@ -490,7 +504,6 @@
         document.getElementById('total-percent-text').innerText = pctTotal.toFixed(1) + '%';
     }
 
-    // 輔助函式：顯示超前/落後標籤
     function updateStatusBadge(elementId, diff, unit) {
         const el = document.getElementById(elementId);
         if (Math.abs(diff) < 0.1) {
